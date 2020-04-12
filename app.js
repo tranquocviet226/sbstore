@@ -17,8 +17,17 @@ const app = express();
 
 app.use(flash());
 //Configure handlebars
-app.engine(".hbs", handlebars());
-app.set("view engine", ".hbs");
+// app.engine(".hbs", handlebars());
+// app.set("view engine", ".hbs");
+
+app.engine('.hbs', handlebars({
+  extname: '.hbs',
+  defaultLayout: 'main',
+  partialsDir: path.join(__dirname, 'views/partials'),
+  layoutsDir: path.join(__dirname, 'views/layouts')
+}));
+app.set('view engine', '.hbs');
+app.set('views',path.join(__dirname,'views'))
 
 //Configure passport
 app.use(
