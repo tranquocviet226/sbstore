@@ -22,11 +22,11 @@ const UserSchema = new mongoose.Schema({
   },
   productDate: {
     type: String,
-    required: true,
+    // required: true,
   },
   productDescription: {
     type: String,
-    required: true,
+    // required: true,
   },
   productImage: {
     type: String,
