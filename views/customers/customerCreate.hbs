@@ -1,0 +1,49 @@
+<div class="container">
+
+    <div class="card o-hidden border-0 shadow-lg my-5">
+        <div class="card-body p-0">
+            <!-- Nested Row within Card Body -->
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="p-5">
+                        <div class="text-center">
+                            <h1 class="h4 text-gray-900 mb-4">Thêm khách hàng</h1>
+                        </div>
+                        <form class="user" action="/customer/create/creating" method="POST">
+                            <div class="form-group">
+                                <input type="text" name="customerName" class="form-control form-control-user"
+                                    placeholder="Họ và tên">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" name="customerAge" class="form-control form-control-user"
+                                    placeholder="Tuổi">
+                            </div>
+                            <div class="form-group">
+
+                                <input type="text" name="customerPhone" class="form-control form-control-user"
+                                    placeholder="Số điện thoại">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" name="customerAddress" class="form-control form-control-user"
+                                    placeholder="Địa chỉ">
+                            </div>
+                            <div class="form-group">
+                                <input type="number" name="customerAmount" class="form-control form-control-user"
+                                    placeholder="Tổng tiền">
+                            </div>
+                            <hr>
+                            <input class="btn btn-primary btn-user btn-block" type="submit" value="Thêm khách hàng">
+                            <a href="/customer" class="btn btn-google btn-user btn-block">
+                                Trở lại
+                            </a>
+                        </form>
+                        <hr>
+
+                    </div>
+                </div>
+                <div class="col-lg-5 d-none d-lg-block bg-register-image"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
