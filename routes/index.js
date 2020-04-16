@@ -1,10 +1,50 @@
 const express = require("express");
 const userModel = require("../model/userModel");
+const photoModel = require("../model/photos.chunks");
 const router = express.Router();
 const { v4: uuidv4 } = require("uuid");
 const multer = require("multer");
+const GridFsStorage = require("multer-gridfs-storage");
+const mongoose = require("mongoose");
+const util = require("util");
 
-//Multer
+// Upload Image to mongodb Binary
+const mongoURI =
+  "mongodb+srv://tranquocviet226:khoqua226@mydb-unmzm.mongodb.net/dbShop?retryWrites=true&w=majority";
+const conn = mongoose.createConnection(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+let gfs;
+conn.once("open", () => {
+  // init stream
+  gfs = new mongoose.mongo.GridFSBucket(conn.db, {
+    bucketName: "photos",
+  });
+});
+
+const gridStore = new GridFsStorage({
+  url:
+    "mongodb+srv://tranquocviet226:khoqua226@mydb-unmzm.mongodb.net/dbShop?retryWrites=true&w=majority",
+  options: { useNewUrlParser: true, useUnifiedTopology: true },
+  file: (req, file) => {
+    const match = ["image/png", "image/jpeg"];
+    if (match.indexOf(file.mimetype) === -1) {
+      const filename = `${Date.now()}-bezkoder-${file.originalname}`;
+      return filename;
+    }
+    return {
+      bucketName: "photos",
+      filename: `${Date.now()}-bezkoder-${file.originalname}`,
+    };
+  },
+});
+
+const upload = multer({ storage: gridStore }).single("avatar");
+const uploadFilesMiddleware = util.promisify(upload);
+
+//Multer Upload image to Node
 const Storage = multer.diskStorage({
   destination(req, file, callback) {
     callback(null, "public/imgUser");
@@ -13,7 +53,6 @@ const Storage = multer.diskStorage({
     callback(null, `${uuidv4()}.jpeg`);
   },
 });
-const upload = multer({ storage: Storage });
 
 const isAuthenticated = (req, res, next) => {
   //Nếu đã đăng nhập thì tiếp tục điều hướng
@@ -57,18 +96,14 @@ const Routes = (passport) => {
     });
   });
 
-  router.post(
-    "/signup", (req, res, next) => {
-      // avatar = "hello";
-      passport.authenticate("signup", {
-        successRedirect: "/home",
-        failureRedirect: "/signup",
-        failureFlash: true,
-      })
-      (req,res,next);
-    }
-   
-  );
+  router.post("/signup", (req, res, next) => {
+    // avatar = "hello";
+    passport.authenticate("signup", {
+      successRedirect: "/home",
+      failureRedirect: "/signup",
+      failureFlash: true,
+    })(req, res, next);
+  });
 
   // Profile -----------------
   router.get("/profile", (req, res) => {
@@ -92,7 +127,7 @@ const Routes = (passport) => {
   router.post(
     "/user/update/:id",
     isAuthenticated,
-    upload.single("avatar"),
+    uploadFilesMiddleware,
     async (req, res) => {
       const filter = { _id: req.params.id };
       const update = {
@@ -121,6 +156,22 @@ const Routes = (passport) => {
       }
     }
   );
+  // Get image from mongodb
+  router.get("/image/:filename", (req, res) => {
+    // console.log('id', req.params.id)
+    gfs
+      .find({
+        filename: req.params.filename,
+      })
+      .toArray((err, files) => {
+        if (!files || files.length === 0) {
+          return res.status(404).json({
+            err: "no files exist",
+          });
+        }
+        gfs.openDownloadStreamByName(req.params.filename).pipe(res);
+      });
+  });
 
   //Photo
   router.get("/home", isAuthenticated, async (req, res) => {

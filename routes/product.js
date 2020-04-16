@@ -4,6 +4,9 @@ const router = express.Router();
 const { v4: uuidv4 } = require("uuid");
 const multer = require("multer");
 const fs = require("fs");
+const GridFsStorage = require("multer-gridfs-storage");
+const mongoose = require("mongoose");
+const util = require("util");
 
 //Multer
 const Storage = multer.diskStorage({
@@ -14,7 +17,42 @@ const Storage = multer.diskStorage({
     callback(null, `${uuidv4()}.jpeg`);
   },
 });
-const upload = multer({ storage: Storage });
+
+// Upload Image to mongodb Binary
+const mongoURI =
+  "mongodb+srv://tranquocviet226:khoqua226@mydb-unmzm.mongodb.net/dbShop?retryWrites=true&w=majority";
+const conn = mongoose.createConnection(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+let gfs;
+conn.once("open", () => {
+  // init stream
+  gfs = new mongoose.mongo.GridFSBucket(conn.db, {
+    bucketName: "photos",
+  });
+});
+
+const gridStore = new GridFsStorage({
+  url:
+    "mongodb+srv://tranquocviet226:khoqua226@mydb-unmzm.mongodb.net/dbShop?retryWrites=true&w=majority",
+  options: { useNewUrlParser: true, useUnifiedTopology: true },
+  file: (req, file) => {
+    const match = ["image/png", "image/jpeg"];
+    if (match.indexOf(file.mimetype) === -1) {
+      const filename = `${Date.now()}-bezkoder-${file.originalname}`;
+      return filename;
+    }
+    return {
+      bucketName: "photos",
+      filename: `${Date.now()}-bezkoder-${file.originalname}`,
+    };
+  },
+});
+
+const upload = multer({ storage: gridStore }).single("product");
+const uploadFilesMiddleware = util.promisify(upload);
 
 const isAuthenticated = (req, res, next) => {
   if (req.isAuthenticated()) return next();
@@ -49,7 +87,7 @@ const routers = (passport) => {
   router.post(
     "/create/creating",
     isAuthenticated,
-    upload.single("product"),
+    uploadFilesMiddleware,
     async (req, res) => {
       try {
         const Product = new productModel({
@@ -70,6 +108,23 @@ const routers = (passport) => {
     }
   );
 
+   // Get image from mongodb
+   router.get("/image/:filename", (req, res) => {
+    // console.log('id', req.params.id)
+    gfs
+      .find({
+        filename: req.params.filename,
+      })
+      .toArray((err, files) => {
+        if (!files || files.length === 0) {
+          return res.status(404).json({
+            err: "no files exist",
+          });
+        }
+        gfs.openDownloadStreamByName(req.params.filename).pipe(res);
+      });
+  });
+
   //Form update product
   router.get("/update/:id", isAuthenticated, async (req, res) => {
     await productModel.findOne({ _id: req.params.id }, (err, products) => {
@@ -85,7 +140,7 @@ const routers = (passport) => {
   router.post(
     "/update/updating/:id",
     isAuthenticated,
-    upload.single("product"),
+    uploadFilesMiddleware,
     async (req, res) => {
       const filter = { _id: req.params.id };
       const update = {
@@ -124,11 +179,11 @@ const routers = (passport) => {
         if (err) {
           res.status(500).send(err);
         }
-        fs.unlink(`public/imgProduct/${result.productImage}`, (err) => {
-          if (err) {
-            res.status(500).send(err);
-          }
-        });
+        // fs.unlink(`public/imgProduct/${result.productImage}`, (err) => {
+        //   if (err) {
+        //     res.status(500).send(err);
+        //   }
+        // });
       }
     );
     res.redirect("/product");
