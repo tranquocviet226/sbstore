@@ -21,7 +21,7 @@
               <th>Số lượng</th>
               <th>Đơn giá</th>
               <th>Ngày nhập</th>
-              <th>Ghi chú</th>
+              {{!-- <th>Mô tả</th> --}}
               <th>Chỉnh sửa</th>
             </tr>
           </thead>
@@ -34,7 +34,7 @@
               <th>Số lượng</th>
               <th>Đơn giá</th>
               <th>Ngày nhập</th>
-              <th>Ghi chú</th>
+              {{!-- <th>Mô tả</th> --}}
               <th>Chỉnh sửa</th>
             </tr>
           </tfoot>
@@ -52,7 +52,7 @@
               <td>{{this.productQuantity}}</td>
               <td>{{this.productPrice}}</td>
               <td>{{this.productDate}}</td>
-              <td>{{this.productDescription}}</td>
+              {{!-- <td>{{this.productDescription}}</td> --}}
               <td>
                 <a href="/product/update/{{this._id}}" class="btn btn-info btn-sm">Sửa</a>
                 <a href="/product/delete/{{this._id}}" class="btn btn-danger btn-sm">Xóa</a>

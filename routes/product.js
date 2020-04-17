@@ -108,8 +108,8 @@ const routers = (passport) => {
     }
   );
 
-   // Get image from mongodb
-   router.get("/image/:filename", (req, res) => {
+  // Get image from mongodb
+  router.get("/image/:filename", (req, res) => {
     // console.log('id', req.params.id)
     gfs
       .find({
@@ -127,13 +127,15 @@ const routers = (passport) => {
 
   //Form update product
   router.get("/update/:id", isAuthenticated, async (req, res) => {
-    await productModel.findOne({ _id: req.params.id }, (err, products) => {
-      if (err) {
-        res.status(500).send(err);
+    await productModel.findById(req.params.id, (err, product) => {
+      if (!err) {
+        res.render("products/productUpdate.hbs", {
+          title: "Product",
+          products: product.toJSON(),
+          yourname: req.user.fullname,
+          avatar: req.user.avatar,
+        });
       }
-      res.render("products/productUpdate.hbs", {
-        products: products.toJSON(),
-      });
     });
   });
   //Update product
